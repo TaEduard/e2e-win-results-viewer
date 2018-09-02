@@ -85,7 +85,7 @@ def process_jobs():
         job_handler_map[job_type]()
 
 def main():
-    #process_jobs()
+    process_jobs()
     pl = create_landing_page(config["jobs"])
     write_with_ensure_path(pl, os.path.join(config["outputFolder"], LANDING_PAGE_NAME))
 
