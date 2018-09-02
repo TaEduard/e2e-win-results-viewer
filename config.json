@@ -1,0 +1,11 @@
+{
+    "outputFolder": "/Users/atuvenie/workspace/junit_viewer_test/test-output-new",
+    "jobs": {
+        "periodics": [
+            {
+                "jobResultsDir": "/Users/atuvenie/workspace/junit_viewer_test/35.231.16.99/win-e2e-test/pr-logs/pull-kubernetes-e2e-win-1-11-fast",
+                "jobName": "pull-kubernetes-e2e-win-1-11-fast"
+            }
+        ]
+    }
+}

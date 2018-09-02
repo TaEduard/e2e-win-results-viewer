@@ -1,0 +1,11 @@
+{
+    "outputFolder": "output folder dir",
+    "jobs": {
+        "periodics": [
+            {
+                "jobResultsDir": "location of test results",
+                "jobName": "job name"
+            }
+        ]
+    }
+}
