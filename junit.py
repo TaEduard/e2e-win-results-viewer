@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 import utils
 import os
+from utils import *
 
 
 def merge_test_cases(test_cases, dest, show_skipped=False):
@@ -16,4 +17,5 @@ def merge_test_cases(test_cases, dest, show_skipped=False):
                 continue
             xmlElem.append(testcase)
     xmlTree = ET.ElementTree(xmlElem)
+    mkdir_p(os.path.dirname(dest))
     xmlTree.write(dest)
