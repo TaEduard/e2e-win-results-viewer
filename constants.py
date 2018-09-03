@@ -23,6 +23,6 @@ JOB_TEST_MATRIX_NAME = "%(job_name)s-test-matrix.html"
 # all are relative to job output dir defined in config
 JOB_BUILD_SUMMARY_SOURCE_PATH = "%(build)s/artifacts/junit_runner.xml"
 JOB_BUILD_TEST_SOURCE_DIR = "%(build)s/artifacts"
-JOB_BUILD_TEST_REGEX = "junit_([0-9]+)\.xml"
+JOB_BUILD_TEST_REGEX = "junit_([0-9]+)\.xml$"
 
 JOB_TYPES = ["presubmit", "periodic", "postsubmit", "custom_acs"]
