@@ -25,7 +25,7 @@ def add_custom_acs_job(job):
     job_test_results_path = os.path.join("custom_acs", job["jobName"], "test_matrix")
     for pr in os.listdir(os.path.join(results, job_test_results_path)):
         pr_matrix_path = os.path.join(job_test_results_path, pr , "%s-%s-test-matrix.html" % (job["jobName"], pr))
-        output += "<span style=' margin-left: 10px;'><a href=%s>%s : TEST MATRIX</a></span>" % (pr_matrix_path, pr)
+        output += "<li><span style=' margin-left: 10px;'><a href=%s>%s : TEST MATRIX</a></span>" % (pr_matrix_path, pr)
         output += "</li>"
     output += "</ul></li>"
     return output
