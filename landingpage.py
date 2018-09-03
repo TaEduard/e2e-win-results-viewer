@@ -8,13 +8,13 @@ def add_job_name(job):
     return output
 
 def add_job_summary_matrix(job, job_type):
-    job_summary_matrix_path = JOB_SUMMARY_MATRIX_PATH % {"job_name": job['jobName']}
+    job_summary_matrix_path = os.path.join(job_type, job["jobName"], "summary_matrix")
     job_summary_matrix_name = JOB_SUMMARY_MATRIX_NAME % {"job_name": job['jobName']}
     output = "<span style=' margin-left: 10px;'><a href=%s>SUMMARY</a></span>" % (os.path.join(job_summary_matrix_path, job_summary_matrix_name))
     return output
 
 def add_job_test_matrix(job, job_type):
-    job_summary_matrix_path = JOB_TEST_MATRIX_PATH % {"job_name": job['jobName']}
+    job_summary_matrix_path = os.path.join(job_type, job["jobName"], "test_matrix")
     job_summary_matrix_name = JOB_TEST_MATRIX_NAME % {"job_name": job['jobName']}
     output = "<span style=' margin-left: 10px;'><a href=%s>TEST MATRIX</a></span>" % (os.path.join(job_summary_matrix_path, job_summary_matrix_name))
     return output
