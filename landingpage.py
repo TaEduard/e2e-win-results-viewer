@@ -20,8 +20,23 @@ def add_job_test_matrix(job, job_type):
     return output
 
 
+def add_custom_acs_job(job):
+    output = "<li><ul>"
+    job_test_results_path = os.path.join("custom_acs", job["jobName"], "test_matrix")
+    for pr in os.listdir(os.path.join(results, job_test_results_path)):
+        pr_matrix_path = os.path.join(job_test_results_path, pr , "%s-%s-test-matrix.html" % (job["jobName"], pr))
+        output += "<span style=' margin-left: 10px;'><a href=%s>%s : TEST MATRIX</a></span>" % (pr_matrix_path, pr)
+        output += "</li>"
+    output += "</ul></li>"
+    return output
+
 def add_job(job, job_type):
     output = add_job_name(job)
+    if job_type == "custom_acs":
+        # jobs are per pr
+        output += add_job_summary_matrix(job, job_type)
+        output += add_custom_acs_job(job)
+        return output
     output += add_job_test_matrix(job, job_type)
     output += add_job_summary_matrix(job, job_type)
     return output
@@ -34,7 +49,9 @@ def add_jobs(job_type, jobs):
     output += "</ul></li>"
     return output
         
-def create_landing_page(jobs):
+def create_landing_page(jobs, results_folder):
+    global results 
+    results = results_folder
     output = "<html><body>Test reports<ul>"
     for job_type in jobs.keys():
         if len(jobs[job_type]) > 0:

@@ -125,7 +125,7 @@ def create_job_results_matrix_custom_acs(job):
         reports = [report for report in os.listdir(source_path) if report.endswith("xml")]
         reports_paths = [os.path.join(source_path, report) for report in reports]
         matrix_output_dir = os.path.join(
-             config['outputFolder'], 'custom_acs', job["jobName"], 'test_matrix'
+             config['outputFolder'], 'custom_acs', job["jobName"], 'test_matrix' , pr
         )
         matrix_output_name = "%s-%s-test-matrix.html" % (job["jobName"], pr)
         create_matrix(reports_paths, os.path.join(matrix_output_dir, matrix_output_name))
@@ -152,7 +152,7 @@ def process_jobs():
 
 def main():
     process_jobs()
-    pl = create_landing_page(config["jobs"])
+    pl = create_landing_page(config["jobs"], results_folder=config["outputFolder"])
     write_with_ensure_path(pl, os.path.join(config["outputFolder"], LANDING_PAGE_NAME))
 
 
