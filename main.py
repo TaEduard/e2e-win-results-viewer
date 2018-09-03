@@ -100,11 +100,12 @@ def copy_job_summaries_custom_acs(job):
 
 def copy_job_test_results_custom_acs(job):
     regex = re.compile(JOB_BUILD_TEST_REGEX)
-    destination_dir = os.path.join(config['outputFolder'],"custom_acs", job["jobName"], "test_raw_results")
+    raw_results_dir = os.path.join(config['outputFolder'],"custom_acs", job["jobName"], "test_raw_results")
     for pr in os.listdir(job["jobResultsDir"]):
         job_path = os.path.join(job["jobResultsDir"], pr, job["jobName"])
         if os.path.exists(job_path):
             for job_id in os.listdir(job_path):
+                destination_dir = os.path.join(raw_results_dir, pr)
                 for build in os.listdir(os.path.join(job_path, job_id)):
                     build_test_results = []
                     source_path = os.path.join(job_path, job_id, build, "artifacts")
@@ -114,18 +115,20 @@ def copy_job_test_results_custom_acs(job):
                         m = regex.match(junit_file)
                         if m:
                             build_test_results.append(os.path.join(source_path, junit_file))
-                    merge_path = os.path.join(destination_dir, "%s-%s-%s.xml" % (pr, job_id, build))
+                    merge_path = os.path.join(destination_dir, "%s-%s.xml" % (build, job_id))
                     merge_test_cases(build_test_results, merge_path, show_skipped=False)
 
 def create_job_results_matrix_custom_acs(job):
-    source_path = os.path.join(config['outputFolder'],"custom_acs", job["jobName"], "test_raw_results")
-    reports = [report for report in os.listdir(source_path) if report.endswith("xml")]
-    reports_paths = [os.path.join(source_path, report) for report in reports]
-    matrix_output_dir = os.path.join(
-        config['outputFolder'], 'custom_acs', job["jobName"], 'test_matrix'
-    )
-    matrix_output_name = JOB_TEST_MATRIX_NAME % {"job_name": job["jobName"]}
-    create_matrix(reports_paths, os.path.join(matrix_output_dir, matrix_output_name))
+    raw_results_dir = os.path.join(config['outputFolder'],"custom_acs", job["jobName"], "test_raw_results")
+    for pr in os.listdir(raw_results_dir):
+        source_path = os.path.join(raw_results_dir, pr)
+        reports = [report for report in os.listdir(source_path) if report.endswith("xml")]
+        reports_paths = [os.path.join(source_path, report) for report in reports]
+        matrix_output_dir = os.path.join(
+             config['outputFolder'], 'custom_acs', job["jobName"], 'test_matrix'
+        )
+        matrix_output_name = "%s-%s-test-matrix.html" % (job["jobName"], pr)
+        create_matrix(reports_paths, os.path.join(matrix_output_dir, matrix_output_name))
 
 
 def process_custom():
