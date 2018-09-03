@@ -1,11 +1,17 @@
 {
-    "outputFolder": "output folder dir",
+    "outputFolder": "/Users/atuvenie/workspace/junit_viewer_test/test-output-new",
     "jobs": {
         "periodics": [
             {
-                "jobResultsDir": "location of test results",
-                "jobName": "job name"
+                "jobResultsDir": "/Users/atuvenie/workspace/junit_viewer_test/35.231.16.99/win-e2e-test/pr-logs/pull-kubernetes-e2e-win-1-11-fast",
+                "jobName": "pull-kubernetes-e2e-win-1-11-fast"
             }
-        ]
+        ],
+	"custom_acs": [
+	   {
+		"jobResultsDir": "/Users/atuvenie/workspace/junit_viewer_test/acs-engine_Azure",
+		"jobName": "pull-acs-engine"
+	   }
+	]
     }
 }
