@@ -1,17 +1,20 @@
 {
     "outputFolder": "/Users/atuvenie/workspace/junit_viewer_test/test-output-new",
-    "jobs": {
-        "periodics": [
+    "jobs": [
             {
-                "jobResultsDir": "/Users/atuvenie/workspace/junit_viewer_test/35.231.16.99/win-e2e-test/pr-logs/pull-kubernetes-e2e-win-1-11-fast",
+                "id":"first_periodic_job",
+                "jobResultsDir": "/Users/atuvenie/workspace/junit_viewer_test/35.231.16.99/win-e2e-test/pr-logs/%(jobName)s/*/*/%(fileName)s",
                 "jobName": "pull-kubernetes-e2e-win-1-11-fast"
-            }
-        ],
-	"custom_acs": [
+                "fileName": "junit_[0-9]{2}.xml"
+            },
 	   {
-		"jobResultsDir": "/Users/atuvenie/workspace/junit_viewer_test/acs-engine_Azure",
-		"jobName": "pull-acs-engine"
+		"jobResultsDir": "/Users/atuvenie/workspace/junit_viewer_test/acs-engine_Azure/%(pr)s/%(jobName)s/*/%(buildID)s/%(fileName)s",
+                "pr":"*",
+		"jobName": "pull-acs-engine",
+                "buildID":"*",
+                "fileName":"junit_[0-9]{2}.xml",
+                "uid":["pr","jobName","fileName"]
+                "outputFolder":"/Users/atuvenie/workspace/junit_viewer_test/test-output-new/acs-test"
 	   }
 	]
-    }
 }
