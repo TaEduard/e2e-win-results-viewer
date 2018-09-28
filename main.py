@@ -1,165 +1,99 @@
 import config_parser
 import os
-from constants import *
 from utils import *
 from junit import *
 from landingpage import *
 import re
 
+LANDING_PAGE_NAME = "index.html"
+
 config = config_parser.readConfig()
 
-def get_job_builds(job):
-    job_path = job["jobResultsDir"]
-    return [path for path in os.listdir(job_path) if os.path.isdir(os.path.join(job_path, path))]
+def format_path(job,job_counter):
+    job_keys = format_list(re.findall("\%\(.*?\)s", job["jobResultsDir"]))
+    job_keys_dict = {}
+    for key in job_keys:
+        if key not in job:
+            print("".join(["\n For job: ", str(job_counter), " no key: ", key, " was declared."]))
+            return None, None, None
+        if isinstance(job[key], list):
+             job_keys_dict[key] = convert_list_to_regex(job[key])
+        else:
+             if "uid" in job and key in job["uid"]:
+                 job_keys_dict[key] = "".join(["(", job[key], ")"])
+             else:
+                 job_keys_dict[key] = job[key]
+    path = regex = job["jobResultsDir"] % job_keys_dict
+    path = path.split("*")[0]
+    path = path.split("(")[0]
+    return regex, path, job_keys
 
+def walk_path(job, outputfolder, counter, matrix_dict, job_counter):
+    regex, path, keys = format_path(job, job_counter)
+    if path is None:
+        return matrix_dict
+    path_list=[]
+    for root, dirs, files in os.walk(path, topdown=False):
+        files_in_current_dir = '\n'.join(files)
+        file_matches = re.findall(format_regex(get_file_name_regex(job, keys)), files_in_current_dir)
+        path_match = re.match(format_regex(regex.replace(get_file_name_regex(job, keys), "")), root)
+        if path_match and file_matches:
+            if len(file_matches)>1:
+                tbm_list=[]
+                for match in file_matches:
+                    tbm_list.append(os.path.join(root, match))
+                if counter>0:
+                    file_path=os.path.join(root, create_file_name(file_matches[0], path_match, counter, job_counter))
+                    counter+=1
+                else:
+                    file_path=os.path.join(root, create_file_name(file_matches[0], path_match, job["uid"], job_counter))
+                merge_test_cases(tbm_list, file_path, show_skipped=False)
+                del tbm_list
+                path_list.append(file_path)
+            else:
+                if counter>0:
+                    file_path=os.path.join(root, create_file_name(file_matches[0], path_match, counter, job_counter))
+                    counter+=1
+                else:
+                    file_path=os.path.join(root, create_file_name(file_matches[0], path_match, job["uid"], job_counter))
+                copy_ensure_path(os.path.join(root, file_matches[0]), file_path)
+                path_list.append(file_path)
+    if path_list:
+        if "id" in job and job["id"]:
+            matrix_output_name_path = matrix_output_name = "".join([job["id"], "matrix.html"])
+        else:
+            matrix_output_name = "".join([str(job_counter), path, "matrix.html"])
+            matrix_output_name_path = matrix_output_name.replace("/", "_")
+        if "outputFolder" in job and job["outputFolder"]:
+            create_matrix(path_list, os.path.join(job["outputFolder"], matrix_output_name_path))
+            relative_path = os.path.join(job["outputFolder"], matrix_output_name_path)
+            matrix_dict = add_matrix_to_dict(os.path.join(job["outputFolder"], matrix_output_name_path),
+                                              matrix_output_name, matrix_dict)
+        elif outputfolder:
+            create_matrix(path_list, os.path.join(outputfolder, matrix_output_name_path))
+            matrix_dict = add_matrix_to_dict(os.path.join(outputfolder, matrix_output_name_path),
+                                              matrix_output_name, matrix_dict)
+        else:
+            print("".join(["\n For job: ", str(job_counter), "no outputFolder provided"]))
+    else:
+        print("".join(["\n For job: ", str(job_counter), " bad path"]))
+    delete_files(path_list)
+    return matrix_dict
 
-def copy_job_summaries(job):
-    for build in get_job_builds(job):
-        source_path = os.path.join(job['jobResultsDir'],
-                                   JOB_BUILD_SUMMARY_SOURCE_PATH % {"build": build})
-        destination_path = os.path.join(config['outputFolder'],
-                                        JOB_SUMMARY_RAW_RESULTS_PATH % {"job_name": job["jobName"]},
-                                        "%s.xml" % build )
-        if os.path.exists(source_path):
-            copy_ensure_path(source_path, destination_path)
-
-def create_job_summary_matrix(job):
-    job_report_path = os.path.join(config['outputFolder'],
-                                   JOB_SUMMARY_RAW_RESULTS_PATH % {"job_name": job['jobName']})
-    reports = [report for report in os.listdir(job_report_path) if report.endswith("xml")]
-    reports_paths = [os.path.join(job_report_path, report) for report in reports]
-    matrix_output_dir = os.path.join(
-        config['outputFolder'], JOB_SUMMARY_MATRIX_PATH % {"job_name": job["jobName"]}
-    )
-    matrix_output_name = JOB_SUMMARY_MATRIX_NAME % {"job_name": job["jobName"]}
-    create_matrix(reports_paths, os.path.join(matrix_output_dir, matrix_output_name))
-
-def copy_job_test_results(job):
-    regex = re.compile(JOB_BUILD_TEST_REGEX)
-    for build in get_job_builds(job):
-        source_dir = os.path.join(job['jobResultsDir'],
-                                   JOB_BUILD_TEST_SOURCE_DIR % {"build": build})
-        destination_dir = os.path.join(config['outputFolder'],
-                                     JOB_TEST_RAW_RESULTS_PATH % {"job_name": job["jobName"]})
-        build_test_results = []
-        for path in os.listdir(source_dir):
-            m = regex.match(path)
-            if m:
-                build_test_results.append(os.path.join(source_dir, path))
-        merge_path = os.path.join(destination_dir, "%s.xml" % build)
-        merge_test_cases(build_test_results, merge_path, show_skipped=False)
-
-def create_job_test_matrix(job):
-    job_report_path = os.path.join(config['outputFolder'],
-                                   JOB_TEST_RAW_RESULTS_PATH % {"job_name": job['jobName']})
-    reports = [report for report in os.listdir(job_report_path) if report.endswith("xml")]
-    reports_paths = [os.path.join(job_report_path, report) for report in reports]
-    matrix_output_dir = os.path.join(
-        config['outputFolder'], JOB_TEST_MATRIX_PATH % {"job_name": job["jobName"]}
-    )
-    matrix_output_name = JOB_TEST_MATRIX_NAME % {"job_name": job["jobName"]}
-    create_matrix(reports_paths, os.path.join(matrix_output_dir, matrix_output_name))
-
-
-def create_job_summary_matrix_custom_acs(job):
-    summary_res_path = os.path.join(config['outputFolder'], "custom_acs", job['jobName'], "summary_raw_res")
-    summary_files = []
-    for path in os.listdir(summary_res_path):
-        summary_files.append(os.path.join(summary_res_path, path))
-    matrix_output_dir = os.path.join(
-        config['outputFolder'], 'custom_acs', job["jobName"], 'summary_matrix'
-    )
-    matrix_output_name = JOB_SUMMARY_MATRIX_NAME % {"job_name": job["jobName"]}
-    create_matrix(summary_files, os.path.join(matrix_output_dir, matrix_output_name))
-
-
-def process_postsubmits():
-    pass
-
-def process_presubmits():
-    pass
-
-def process_periodics():
-    for job in config["jobs"]["periodics"]:
-        copy_job_summaries(job)
-        copy_job_test_results(job)
-        create_job_summary_matrix(job)
-        create_job_test_matrix(job)
-
-def copy_job_summaries_custom_acs(job):
-    destination_dir = os.path.join(config["outputFolder"], "custom_acs" , job["jobName"], "summary_raw_res")
-    for pr in os.listdir(job["jobResultsDir"]):
-        job_path = os.path.join(job["jobResultsDir"], pr, job["jobName"])
-        if os.path.exists(job_path):
-            for job_id in os.listdir(job_path):
-                for build in os.listdir(os.path.join(job_path, job_id)):
-                    summary_path = os.path.join(job_path, job_id, build, "artifacts", "junit_runner.xml")
-                    destination_path = os.path.join(destination_dir, "%s-%s-%s.xml" % (pr, job_id, build))
-                    if os.path.exists(summary_path):
-                        copy_ensure_path(summary_path, destination_path)
-
-def copy_job_test_results_custom_acs(job):
-    regex = re.compile(JOB_BUILD_TEST_REGEX)
-    raw_results_dir = os.path.join(config['outputFolder'],"custom_acs", job["jobName"], "test_raw_results")
-    for pr in os.listdir(job["jobResultsDir"]):
-        job_path = os.path.join(job["jobResultsDir"], pr, job["jobName"])
-        if os.path.exists(job_path):
-            for job_id in os.listdir(job_path):
-                destination_dir = os.path.join(raw_results_dir, pr)
-                for build in os.listdir(os.path.join(job_path, job_id)):
-                    build_test_results = []
-                    source_path = os.path.join(job_path, job_id, build, "artifacts")
-                    if not os.path.exists(source_path):
-                        continue
-                    for junit_file in os.listdir(source_path):
-                        m = regex.match(junit_file)
-                        if m:
-                            build_test_results.append(os.path.join(source_path, junit_file))
-                    merge_path = os.path.join(destination_dir, "%s-%s-%s.xml" % (build, job_id, pr))
-                    merge_test_cases(build_test_results, merge_path, show_skipped=False)
-
-def create_job_results_matrix_custom_acs(job):
-    raw_results_dir = os.path.join(config['outputFolder'],"custom_acs", job["jobName"], "test_raw_results")
-    aggregate_results_paths = []
-    for pr in os.listdir(raw_results_dir):
-        source_path = os.path.join(raw_results_dir, pr)
-        reports = [report for report in os.listdir(source_path) if report.endswith("xml")]
-        reports_paths = [os.path.join(source_path, report) for report in reports]
-        aggregate_results_paths += reports_paths
-        matrix_output_dir = os.path.join(
-             config['outputFolder'], 'custom_acs', job["jobName"], 'test_matrix' , pr
-        )
-        matrix_output_name = "%s-%s-test-matrix.html" % (job["jobName"], pr)
-        create_matrix(reports_paths, os.path.join(matrix_output_dir, matrix_output_name))
-    aggregate_results_matrix_path = os.path.join(
-        config['outputFolder'], 'custom_acs', job["jobName"], 'test_matrix'
-    )
-    aggregate_results_matrix_name = "%s-test-matrix.html" % (job["jobName"])
-    create_matrix(aggregate_results_paths, os.path.join( aggregate_results_matrix_path , aggregate_results_matrix_name ))
-
-def process_custom():
-    # acs engine jobs don't have the folder struct like presubmits
-    for job in config["jobs"]["custom_acs"]:
-        copy_job_summaries_custom_acs(job)
-        copy_job_test_results_custom_acs(job)
-        create_job_summary_matrix_custom_acs(job)
-        create_job_results_matrix_custom_acs(job)
-
-job_handler_map = {
-    'periodic': process_periodics,
-    'presubmit': process_presubmits,
-    'postsubmit': process_postsubmits,
-    'custom_acs': process_custom
-}
-
-def process_jobs():
-    for job_type in JOB_TYPES:
-        job_handler_map[job_type]()
+def process_jobs(matrix_dict, job_counter):
+    for job in config["jobs"]:
+        job_counter+=1
+        counter = 0
+        if "uid" not in job:
+            counter+=1
+        matrix_dict = walk_path(job, config["outputFolder"], counter, matrix_dict, job_counter)
+    return matrix_dict
 
 def main():
-    process_jobs()
-    pl = create_landing_page(config["jobs"], results_folder=config["outputFolder"])
-    write_with_ensure_path(pl, os.path.join(config["outputFolder"], LANDING_PAGE_NAME))
-
+    matrix_dict = {}
+    job_counter = 0
+    matrix_dict = process_jobs(matrix_dict, job_counter)
+    lp = create_landing_page(matrix_dict, config)
+    write_with_ensure_path(lp, os.path.join(config["outputFolder"], LANDING_PAGE_NAME))
 
 main()
