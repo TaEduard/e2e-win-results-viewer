@@ -1,0 +1,49 @@
+{ "outputFolder": "/home/eduard/tmp/another/output",
+  "jobs":[
+             {  "no.": "1",
+                "id":"first-job_pull-kubernetes-e2e-win-1-12-parallel_Tests",
+                "jobResultsDir": "/home/eduard/tmp/another/35.231.16.99/win-e2e-test/pr-logs/%(jobname)s/%(buildID)s/artifacts/%(mergeFiles)s",
+                "jobname":"pull-kubernetes-e2e-win-1-12-parallel",
+                "buildID":["1041476474818793472","1040596425588609024"],
+                "mergeFiles":"junit_[0-9]{2}.xml",
+                "uid":["jobname","buildID"],
+                "outputFolder": "/home/eduard/tmp/another/output/first_job"
+             },
+             {  "no.": "2",
+                "jobResultsDir": "/home/eduard/tmp/another/35.231.16.99/win-e2e-test/pr-logs/*/*/*/%(mergeFiles)s",
+                "mergeFiles":"junit_[0-9]{2}.xml",
+                "outputFolder": "/home/eduard/tmp/another/output/second_job"
+             },
+              { "no.": "3",
+                "jobResultsDir": "/home/eduard/tmp/another/35.231.16.99/win-e2e-test/pr-logs/%(jobame)s/%(secondKey)s/artifacts/%(mergeFiles)s",
+                "jobame":"pull-kubernetes-e2e-win-1-12-seq",
+                "secondKey":"*",
+                "mergeFiles":"junit_*.xml$",
+                "uid":["jobame","secondKey"]
+             },
+             {  "no.": "4",
+                "jobResultsDir": "/home/eduard/tmp/another/35.231.16.99/win-e2e-test/pr-logs/%(jobame)s/%(secondKey)s/artifacts/%(mergeFiles)s",
+                "jobame":"pull-kubernetes-e2e-win-1-12-seq",
+                "secondKey":"*",
+                "mergeFiles":"junit_runner.xml",
+                "uid":["jobame","secondKey"]
+             },
+              { "no.": "5",
+                "jobResultsDir": "/home/eduard/tmp/another/35.231.16.99/win-e2e-test/pr-logs/%(jobame)s/%(secondKey)s/artifacts/%(mergeFiles)s",
+                "jobame":"pull-kubernetes-e2e-win-1-12-seq",
+                "secondKey":"*",
+                "uid":["jobame","secondKey"]
+             },
+             {
+                "jobResultsDir": "/home/eduard/tmp/another/35.231.16.99/win-e2e-test/*/%(jobName)s/%(buildID)s/*/%(file)s",
+                "jobName": "pull-kubernetes-e2e-win-1-12-fast",
+                "buildID":"*",
+                "file":"junit_[0-9]{2}.xml"
+             },
+             {  "no.":"7",
+                "jobResultsDir": "/home/eduard/tmp/another/35.231.16.99/win-e2e-test/*/%(jobName)s/%(buildID)s/*/*",
+                "jobName": "*",
+                "buildID":"*"
+             }
+         ]
+}
